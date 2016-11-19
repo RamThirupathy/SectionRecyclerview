@@ -87,3 +87,11 @@ Intialize SectionRecylcerView and load it with TreeMap<Integer, ArrayList<Sectio
 
 public void loadRecyclerView(TreeMap<Integer, ArrayList<T>> sectionMap);
 ```
+
+Contributions
+-------
+
+Any contributions are welcome!
+
+Thanks
+-------
