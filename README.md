@@ -6,7 +6,9 @@ Custom recylerview to view show list of sections
 2. Drag the section to bottom/top
 
 # Demo
-![alt tag](https://github.com/RamThirupathy/SectionRecyclerview/blob/master/sectionview.gif)
+
+### Section scroll/click/drag
+<img src="https://github.com/RamThirupathy/SectionRecyclerview/blob/master/sectionview.gif" width="35%"> 
 
 ### Step 1
 Add the following layouts
