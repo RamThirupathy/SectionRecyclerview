@@ -18,6 +18,21 @@ import java.util.TreeMap;
  * listen to {@link RecyclerView} scrolls and sends data to {@link SectionListener}.
  * It used List and TreeMap to achieve fast dragging
  */
+import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.View;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * ScrollLayoutManager class implements {@link android.support.v7.widget.RecyclerView.OnScrollListener}
+ * listen to {@link RecyclerView} scrolls and sends data to {@link SectionListener}.
+ * It used List and TreeMap to achieve fast dragging
+ */
 public class ScrollLayoutManager<T> extends RecyclerView.OnScrollListener {
     private SectionListener mHelper;
     private LinearLayoutManager mLayoutManger;
@@ -33,10 +48,8 @@ public class ScrollLayoutManager<T> extends RecyclerView.OnScrollListener {
     }
 
     /**************************************************************************
-     *
      * Abstract method implementation and other getter methods to get position and
      * view data
-     *
      ***************************************************************************/
     @Override
     public void onScrolled(@NonNull RecyclerView recyclerView, final int dx, final int dy) {
@@ -48,7 +61,7 @@ public class ScrollLayoutManager<T> extends RecyclerView.OnScrollListener {
     @Override
     public void onScrollStateChanged(@NonNull RecyclerView recyclerView, final int newState) {
         super.onScrollStateChanged(recyclerView, newState);
-        if(mLayoutManger.findFirstVisibleItemPosition()==-1)
+        if (mLayoutManger.findFirstVisibleItemPosition() == -1)
             return;
         if (newState == 0) {
             Section firstItem = mItems.get(mLayoutManger.findFirstVisibleItemPosition());
@@ -70,7 +83,7 @@ public class ScrollLayoutManager<T> extends RecyclerView.OnScrollListener {
 
     public void initializeStickySection(int position, int lastSection) {
         if (mSectionMap.floorEntry(position) != null) {
-            int visibleItems = getVisibleItemCount() +1;
+            int visibleItems = getVisibleItemCount() + 1;
             if ((mItems.size() - position) > visibleItems) {
                 mHelper.setSection(SectionListener.SectionType.Header, mSectionMap.floorEntry(mItems.get(position).getSectionPosition()).getValue().get(0));
             } else {
@@ -97,37 +110,39 @@ public class ScrollLayoutManager<T> extends RecyclerView.OnScrollListener {
     }
 
     public Section getPrevSession(int index) {
-        return mSectionMap.floorEntry(index - 1).getValue().get(0);
+        if (mSectionMap.floorEntry(index - 1) != null)
+            return mSectionMap.floorEntry(index - 1).getValue().get(0);
+        else
+            return null;
     }
 
-    public int findFirstVisibleItemPosition(){
+    public int findFirstVisibleItemPosition() {
         return mLayoutManger.findFirstVisibleItemPosition();
     }
 
-    public ArrayList<Section<T>> getItemsInSection(int sectionIndex,int itemsNeeded){
-        ArrayList<Section<T>> sections = new ArrayList<Section<T>>(mSectionMap.get(sectionIndex)) ;
-        while(sections.size()<itemsNeeded){
+    public ArrayList<Section<T>> getItemsInSection(int sectionIndex, int itemsNeeded) {
+        ArrayList<Section<T>> sections = new ArrayList<Section<T>>(mSectionMap.get(sectionIndex));
+        while (sections.size() < itemsNeeded) {
             sectionIndex++;
             int offset = itemsNeeded - sections.size();
             ArrayList<Section<T>> section = mSectionMap.get(sectionIndex);
-            if(section==null){
+            if (section == null) {
                 break;
-            }
-            else if(offset>=section.size()){
+            } else if (offset >= section.size()) {
                 sections.addAll(section);
-            }else{
-                sections.addAll(section.subList(0,offset));
+            } else {
+                sections.addAll(section.subList(0, offset));
             }
         }
         return sections;
     }
 
-    public List<Section<T>> getItemsInList(int listIndex, int itemsNeeded){
-        int toIndex = itemsNeeded+listIndex;
-        if(toIndex>mItems.size()){
+    public List<Section<T>> getItemsInList(int listIndex, int itemsNeeded) {
+        int toIndex = itemsNeeded + listIndex;
+        if (toIndex > mItems.size()) {
             toIndex--;
         }
-        return mItems.subList(listIndex,toIndex);
+        return mItems.subList(listIndex, toIndex);
     }
 
     public void scrollToPositionWithOffset(int position, int offset) {
@@ -138,17 +153,15 @@ public class ScrollLayoutManager<T> extends RecyclerView.OnScrollListener {
         return mLayoutManger.findLastVisibleItemPosition() - mLayoutManger.findFirstVisibleItemPosition();
     }
 
-    public Section getLastVisisbleSession(){
+    public Section getLastVisisbleSession() {
         int position = mLayoutManger.findLastVisibleItemPosition();
         int sectionPosition = mItems.get(position).getSectionPosition();
-        return mSectionMap.get(sectionPosition+1)!=null?mSectionMap.get(sectionPosition+1).get(0):null;
+        return mSectionMap.get(sectionPosition + 1) != null ? mSectionMap.get(sectionPosition + 1).get(0) : null;
     }
 
     /**************************************************************************
-     *
      * Private methods to set up Section header and Footer while user scrolls the
      * recycler view
-     *
      ***************************************************************************/
 
     private void initializeHeaderSection(int position) {
