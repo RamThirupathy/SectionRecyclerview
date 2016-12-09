@@ -6,7 +6,6 @@ package com.ramkt.sectionrecylerview;
 import android.animation.Animator;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -27,7 +26,8 @@ public abstract class SectionListener {
     protected Section mCurrentFooterSection;
     protected View mCloneView;
     private boolean isSectionDragging;
-    private int mSectionDropDuration = 500;//milli seconds
+    private boolean isAnimating;
+    private int mSectionDropDuration = 400;//milli seconds
 
     public SectionListener(Context context, RecyclerView recyclerView, View headerView, View footerView, View cloneView) {
         this.mContext = context;
@@ -203,7 +203,6 @@ public abstract class SectionListener {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_MOVE:
                             newY = event.getRawY() - dY;
-
                             if (mCurrentFooterSection.getSectionPosition() == getLastSection().getSectionPosition()) {
                                 return false;
                             }
@@ -229,6 +228,7 @@ public abstract class SectionListener {
                             }
                             break;
                         case MotionEvent.ACTION_UP:
+                            firstHold = true;
                             if (isTouch) {
                                 isSectionDragging = false;
                                 moveSectionToTopBySectionPosition(mCurrentFooterSection.getSectionPosition());
@@ -247,12 +247,14 @@ public abstract class SectionListener {
                             }
                             break;
                         case MotionEvent.ACTION_DOWN:
-                            if (!isSectionDragging) {
+                            if (!(isSectionDragging && isAnimating)) {
                                 isTouch = true;
+                                isSectionDragging = true;
+                                firstHold = true;
                                 mHeaderView.setTranslationY(0);
                                 dY = event.getRawY();
-                                firstHold = true;
-                                isSectionDragging = true;
+                            }else{
+                                return false;
                             }
                             break;
                     }
@@ -291,7 +293,7 @@ public abstract class SectionListener {
 
         @Override
         public void onAnimationStart(Animator animator) {
-
+            isAnimating = true;
         }
 
         @Override
@@ -309,7 +311,7 @@ public abstract class SectionListener {
                     finishDragging(SectionType.Footer, mCurrentFooterSection);
             }
             resetCloneView();
-
+            isAnimating = false;
         }
 
         @Override
