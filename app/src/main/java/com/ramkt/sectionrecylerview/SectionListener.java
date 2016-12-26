@@ -6,12 +6,12 @@ package com.ramkt.sectionrecylerview;
 import android.animation.Animator;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
-
 
 
 /**
@@ -130,10 +130,7 @@ public abstract class SectionListener {
     }
 
     private void initHeaderSticker() {
-        mHeaderView.setOnTouchListener(new View.OnTouchListener() {
-            float dY;
-            float newY = 0;
-            boolean firstHold = true;
+        mHeaderView.setOnTouchListener(new SectionTouchListener() {
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
@@ -150,6 +147,7 @@ public abstract class SectionListener {
                                 setCloneTop();
                             }
                             if (newY > 0 && newY <= recyclerViewHt) {
+                                isTouch = false;
                                 mCloneView.setTranslationY(newY);
                                 if (newY > (recyclerViewHt - view.getHeight())) {
                                     mFooterView.setTranslationY((int) (newY - (recyclerViewHt - view.getHeight())));
@@ -163,6 +161,9 @@ public abstract class SectionListener {
                             }
                             break;
                         case MotionEvent.ACTION_UP:
+                            if (onActionUp(mCurrentHeaderSection)) {
+                                return false;
+                            }
                             if (mCurrentHeaderSection.getSectionPosition() == 0) {
                                 isSectionDragging = false;
                                 return false;
@@ -174,11 +175,12 @@ public abstract class SectionListener {
                             }
                             break;
                         case MotionEvent.ACTION_DOWN:
-                            if (mCurrentFooterSection != null)
+                            if (onActionDown()) {
                                 mFooterView.setTranslationY(0);
-                            dY = event.getRawY();
-                            firstHold = true;
-                            isSectionDragging = true;
+                                dY = event.getRawY();
+                            } else {
+                                return false;
+                            }
                             break;
                     }
                 } catch (Exception e) {
@@ -190,11 +192,11 @@ public abstract class SectionListener {
     }
 
     private void initFooterSticker() {
-        mFooterView.setOnTouchListener(new View.OnTouchListener() {
-            float dY;
-            float newY = 0;
-            boolean firstHold = true;
-            boolean isTouch = true;
+        mFooterView.setOnTouchListener(new SectionTouchListener() {
+//            float dY;
+//            float newY = 0;
+//            boolean firstHold = true;
+//            boolean isTouch = true;
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
@@ -228,11 +230,7 @@ public abstract class SectionListener {
                             }
                             break;
                         case MotionEvent.ACTION_UP:
-                            firstHold = true;
-                            if (isTouch) {
-                                isSectionDragging = false;
-                                moveSectionToTopBySectionPosition(mCurrentFooterSection.getSectionPosition());
-                                resetCloneView();
+                            if (onActionUp(mCurrentFooterSection)) {
                                 return false;
                             }
                             if (mCurrentFooterSection.getSectionPosition() == getLastSection().getSectionPosition()) {
@@ -247,13 +245,10 @@ public abstract class SectionListener {
                             }
                             break;
                         case MotionEvent.ACTION_DOWN:
-                            if (!(isSectionDragging && isAnimating)) {
-                                isTouch = true;
-                                isSectionDragging = true;
-                                firstHold = true;
+                            if (onActionDown()) {
                                 mHeaderView.setTranslationY(0);
                                 dY = event.getRawY();
-                            }else{
+                            } else {
                                 return false;
                             }
                             break;
@@ -266,10 +261,22 @@ public abstract class SectionListener {
         });
     }
 
+    private void disableParentView() {
+        mRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                return true;
+            }
+        });
+    }
+
+    private void enableParentView() {
+        mRecyclerView.setOnTouchListener(null);
+    }
+
     /**************************************************************************
      * Support Inner class and interface
      ***************************************************************************/
-
     public interface onSectionChangeListener {
         void onSectionChange(SectionType type, Section section);
 
@@ -312,6 +319,7 @@ public abstract class SectionListener {
             }
             resetCloneView();
             isAnimating = false;
+            enableParentView();
         }
 
         @Override
@@ -324,4 +332,36 @@ public abstract class SectionListener {
 
         }
     }
+
+    private abstract class SectionTouchListener implements View.OnTouchListener{
+        protected float dY;
+        protected float newY = 0;
+        protected boolean firstHold = true;
+        protected boolean isTouch = true;
+
+        protected boolean onActionDown() {
+            if (!(isSectionDragging && isAnimating)) {
+                disableParentView();
+                isTouch = true;
+                isSectionDragging = true;
+                firstHold = true;
+                return true;
+            }else {
+                return false;
+            }
+        }
+
+        protected boolean onActionUp(Section section){
+            firstHold = true;
+            if(isTouch){
+                isSectionDragging = false;
+                enableParentView();
+                moveSectionToTopBySectionPosition(section.getSectionPosition());
+                resetCloneView();
+                return true;
+            }
+            return false;
+        }
+    }
+
 }

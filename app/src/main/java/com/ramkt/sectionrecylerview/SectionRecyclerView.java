@@ -8,6 +8,7 @@ import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.ramkt.sectionrecylerview.adapter.ChannelAdapter;
@@ -32,6 +33,12 @@ public class SectionRecyclerView<T extends Section> extends SectionListener {
             super(context, recyclerView, header, footer, cloneView);
             this.mListener = listener;
             this.mCloneRecyclerView = cloneRecyclerView;
+            mCloneRecyclerView.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    return true;
+                }
+            });
             setUpRecyclerView();
         }
 
